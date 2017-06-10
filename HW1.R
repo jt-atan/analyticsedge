@@ -1,3 +1,13 @@
-1+1
-2+2
-
+getwd()
+mvt = read.csv('mvtWeek1.csv')
+summary(mvt)
+str(mvt)
+DateConvert = as.Date(strptime(mvt$Date, "%m/%d/%y %H:%M"))
+mvt$Month = months(DateConvert)
+mvt$Weekday = weekdays(DateConvert)
+mvt$Date = DateConvert
+hist(mvt$Date, breaks=100)
+boxplot(Date ~ Arrest, data = mvt)
+boxplot(mvt$Date ~ mvt$Arrest)
+str(mvt$Date)
+summary(mvt)
