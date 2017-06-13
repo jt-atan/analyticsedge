@@ -1,3 +1,4 @@
+#Part 1
 getwd()
 mvt = read.csv('mvtWeek1.csv')
 summary(mvt)
@@ -28,5 +29,17 @@ Top5 = subset(mvt, LocationDescription == "STREET" | LocationDescription == "PAR
 summary(Top5)
 str(Top5)
 Top5$LocationDescription = factor(Top5$LocationDescription)
+str(Top5)
+table(Top5$LocationDescription, Top5$Arrest)
+gs = subset(Top5, LocationDescription == "GAS STATION")
+summary(gs)
+gs$LocationDescription = factor(gs$LocationDescription)
+str(gs)
+table(gs$LocationDescription, gs$Weekday)
+table(Top5$LocationDescription, Top5$Weekday)
+#Part 2
+
+
+
 
 
