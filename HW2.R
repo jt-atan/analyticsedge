@@ -120,7 +120,32 @@ PredTest1[11]
 #Relative Error
 (FluTest$ILI[11] - PredTest1[11])/FluTest$ILI[11]
 
-#RSME Error
+#RSME Error between predictions and actual values
+sqrt(mean((FluTest$ILI-PredTest1)^2))
 
 
+#3.4.1
+install.packages("zoo")
+library(zoo)
+ILILag2 = lag(zoo(FluTrain$ILI), -2, na.pad=TRUE)
+FluTrain$ILILag2 = coredata(ILILag2)
+summary(ILILag2)
+summary(FluTrain)
+plot(log(FluTrain$ILILag2),log(FluTrain$ILI))
 
+FluTrend2 = lm(log(ILI) ~ Queries + log(ILILag2), data = FluTrain)
+summary(FluTrend2)
+summary(FluTrend1)
+
+#5.1
+ILILag2 = lag(zoo(FluTest$ILI), -2, na.pad=TRUE)
+FluTest$ILILag2 = coredata(ILILag2)
+summary(FluTest$ILILag2)
+
+#5.3
+str(FluTrain)
+FluTest$ILILag2[1] = FluTrain$ILI[416]
+FluTest$ILILag2[2] = FluTrain$ILI[417]
+#5.4
+PredTest2 = exp(predict(FluTrend2, newdata=FluTest))
+sqrt(mean((FluTest$ILI-PredTest2)^2))
