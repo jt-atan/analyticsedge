@@ -101,4 +101,26 @@ which.max(FluTrain$Queries)
 FluTrain$Week[303]
 #This was better to do it by...
 
-hist()
+hist(FluTrain$ILI)
+plot(FluTrain$Queries,log(FluTrain$ILI))
+
+FluTrend1 = lm(log(ILI) ~ Queries, data = FluTrain)
+summary(FluTrend1)
+
+#expand correlations
+cor(FluTrain$Queries, log(FluTrain$ILI))
+
+#test Flu data
+FluTest=read.csv('FluTest.csv')
+PredTest1 = exp(predict(FluTrend1, newdata=FluTest))
+summary(PredTest1)
+FluTest$Week[11]
+PredTest1[11]
+
+#Relative Error
+(FluTest$ILI[11] - PredTest1[11])/FluTest$ILI[11]
+
+#RSME Error
+
+
+

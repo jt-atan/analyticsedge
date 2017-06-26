@@ -81,4 +81,30 @@ SST = sum((wineTest$Price - mean(wine$Price))^2)
 
 
 ##******part 2
+baseball = read.csv('baseball.csv')
+str(baseball)
+moneyball = subset(baseball, Year < 2002)
+summary(moneyball)
+moneyball$RD = moneyball$RS - moneyball$RA
+str(moneyball)
+plot(moneyball$RD, moneyball$W)
+WinsReg = lm(W ~ RD, data=moneyball)
+summary(WinsReg)
+abline(WinsReg)
+99*(.105766)+80.881375
 
+RunsReg = lm(RS ~ OBP + SLG + BA, data=moneyball)
+summary(RunsReg)
+
+
+RunsReg = lm(RS ~ OBP + SLG, data=moneyball)
+summary(RunsReg)
+2737.77*.311 + 0.405*1584.91 -804.63
+-837.38 + 2913.60*.297 + 1514.29*.370
+
+teamRank = c(1,2,3,3,4,4,4,4,5,5)
+wins2012 = c(94,88,95,88,93,94,98,97,93,94)
+wins2013 = c(97,97,92,93,92,96,94,96,92,90)
+
+cor(teamRank, wins2012)
+cor(teamRank, wins2013)
