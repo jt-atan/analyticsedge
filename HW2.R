@@ -149,3 +149,67 @@ FluTest$ILILag2[2] = FluTrain$ILI[417]
 #5.4
 PredTest2 = exp(predict(FluTrend2, newdata=FluTest))
 sqrt(mean((FluTest$ILI-PredTest2)^2))
+
+'''
+***Recitation Elantra Sales***
+'''
+elantra = read.csv('elantra.csv')
+summary(elantra)
+elTrain = subset(elantra, Year <= 2012)
+elTest = subset(elantra, Year > 2012)
+summary(elTest)
+str(elTrain)
+
+elModel1 = lm(ElantraSales ~ Unemployment + CPI_all + CPI_energy + Queries, data = elTrain)
+summary(elModel1)
+
+# In modeling demand and sales, it is often useful to model seasonality.
+
+elModel2 = lm(ElantraSales ~ Month + Unemployment + CPI_all + CPI_energy + Queries, data = elTrain)
+summary(elModel2)
+
+110.69*2
+110.69*4
+
+#convert month to Factor, because right now it is just numeric and hard to model seasonality
+#because of this.
+elTrain$MonthFactor = as.factor(elTrain$Month)
+str(elTrain)
+
+elModel3 = lm(ElantraSales ~ MonthFactor + Unemployment + CPI_all + CPI_energy + Queries, data = elTrain)
+summary(elModel3)
+
+#Changes in sign when adjusting a problem may illustrate a multi-colinearity problem. Remember this!
+cor(elTrain$CPI_energy, elTrain$Month)
+cor(elTrain$CPI_energy, elTrain$Unemployment)
+cor(elTrain$CPI_energy, elTrain$Queries)
+cor(elTrain$CPI_energy, elTrain$CPI_all)
+#This is a better way to do it...
+cor(elTrain[c("Unemployment","Month","Queries","CPI_energy","CPI_all")])
+cor(elTrain[c("Unemployment","Month","Queries","CPI_energy","CPI_all")])
+
+#Iteratively remove variables to see model effects
+summary(elModel3)
+
+elModel4 = lm(ElantraSales ~ MonthFactor + Unemployment + CPI_all + CPI_energy, data = elTrain)
+summary(elModel4)
+
+#Create preds but need to add Month Factor 
+elTest$MonthFactor = as.factor(elTest$Month)
+elPreds = predict(elModel4, newdata = elTest)
+
+#This is the baseline prediction
+mean(elTrain$ElantraSales)
+
+#Calculate r^2
+SSE = sum((elTest$ElantraSales - elPreds)^2)
+SSE
+SST = sum((elTest$ElantraSales - mean(elTrain$ElantraSales))^2)
+1 - SSE/SST
+
+#Largest Absolute Error & where it is
+max(elTest$ElantraSales - elPreds)
+which.max(abs(elPreds - elTest$ElantraSales))
+elTest$Month[5]
+elTest$Year[5]
+elTest[5]
