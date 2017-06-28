@@ -113,6 +113,60 @@ ROCRpredTest = prediction(predictTest, qualityTest$PoorCare)
 auc = as.numeric(performance(ROCRpredTest, "auc")@y.values)
 auc
 
+"
+Week 3 Notes, Part Two
+The Framingham Heart Study
+"
+framingham = read.csv('framingham.csv')
+
+#First randomly split into a training set and testing set
+str(framingham)
+library(caTools)
+set.seed(1000)
+split = sample.split(framingham$TenYearCHD, SplitRatio = 0.65)
+
+#When you have more data, you can put more in the testing set than in the training set. Need 50-80% of the data
+# in the training set
+
+train = subset(framingham, split == TRUE)
+test = subset(framingham, split == FALSE)
+
+framinghamLog = glm(TenYearCHD ~ ., data = train, family = binomial)
+summary(framinghamLog)
+
+predictTest = predict(framinghamLog, type = "response", newdata = test)
+table(test$TenYearCHD, predictTest  >0.5)
+
+#What is the accuracy of the model?
+(1069+11)/(1069+6+11+187)
+
+#The baseline method would choose CHF ten year as zero.
+#Total true negative/ total # obs
+(1069+6)/(1069+6+187+11)
+
+#So the model barely beats baseline....
+#Let's create an AUC
+
+library(ROCR)
+
+ROCRpred = prediction(predictTest, test$TenYearCHD)
+as.numeric(performance(ROCRpred, "auc")@y.values)
+
+#So our AUC is 74%, can tell pretty well the CHD risk then. Can diffferentiate between low risk and high
+# risk patients pretty well.
+
+#QQ Sensitivity and Specificity
+#Sensitivity is: TP/TP+FN
+11/(11+187)
+#Specificity is: TN/TN + FP
+1069/(1069+6)
+
+"
+External validation is critical where the populations are uniform, need to test on other populatins
+"
 
 
 
+
+"
+"
