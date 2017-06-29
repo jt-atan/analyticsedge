@@ -165,8 +165,94 @@ as.numeric(performance(ROCRpred, "auc")@y.values)
 External validation is critical where the populations are uniform, need to test on other populatins
 "
 
+"
+RECITATION: ELECTION PREDICTION
+"
 
+polling = read.csv('PollingData.csv')
+str(polling)
 
+table(polling$Year)
+#5 states missing in 2012, they were very sure where they would vote. So only making predictions
+# for 45 states
+
+summary(polling)
+
+" What do we do for missing values? We can do something called Multiple Imputation, that will
+infer what the values are for the missing data, i.e. if all the other ones are negative, we 
+can safely assume that it is Negative.
+
+Using Multiple Imputation by Chained Equations, or mice
 
 "
+install.packages('mice')
+library(mice)
+
+# We need to select only the variables of the survey for imputation
+
+simple = polling[c("Rasmussen", "SurveyUSA", "PropR", "DiffCount")]
+summary(simple)
+
+#Multiple Imputation Changes the values each time you run it
+set.seed(144)
+imputed = complete(mice(simple))
+
+summary(imputed)
+
+#Last step is to copy the Rasmusson and SurveyUSA variables back into the original
+polling$Rasmussen = imputed$Rasmussen
+polling$SurveyUSA = imputed$SurveyUSA
+
+polling = read.csv('PollingData_Imputed.csv')
+summary(polling)
+#Boom they are no longer missing any values!
+
+#We are going to train on data from 2004 and 2008 elections and test on 2012 elections
+
+Train = subset(polling, Year == 2004 | Year == 2008)
+Test = subset(polling, Year == 2012)
+
+table(Train$Republican)
+
+#The baseline model predicts republicans winning the state. 
+#But it's a poor model.How do we make a better one?
+table(sign(Train$Rasmussen))
+
+table(Train$Republican, sign(Train$Rasmussen))
+#This shows a confusion matrix of accuracy.
+#This is a better baseline to use! Better than the nieve republican baseline
+
+cor(Train)
+#Can't take correlation of names of states of course
+cor(Train[c('Rasmussen', 'SurveyUSA', 'PropR','DiffCount','Republican')])
+#So Rasmussen and SurveyUSA are quite large correlation, so combining them together isn't so
+# great for building a regression model
+
+mod1 = glm(Republican ~ PropR, data = Train, family = binomial)
+summary(mod1)
+
+pred1 = predict(mod1, type = 'response')
+table(Train$Republican, pred1 >= 0.5)
+
+mod2 = glm(Republican ~ SurveyUSA + DiffCount, data = Train, family = binomial)
+pred2 = predict(mod2, type = 'response')
+table(Train$Republican, pred2 >= 0.5)
+
+summary(mod2)
+
+table(Test$Republican, sign(Test$Rasmussen))
+
+#Now we predict on test
+TestPrediction = predict(mod2, newdata=Test, type = 'response')
+
+table(Test$Republican, TestPrediction >= 0.5 )
+
+"AOC is not so important here because we need to just get democrat or republican, and 0.5 is 
+a good metric to use since it goes either way.
+
+But we missed one...so now what?
 "
+
+subset(Test, TestPrediction >= 0.5 & Republican == 0)
+
+#Fin!
