@@ -234,3 +234,38 @@ sum(selectedLoans$profit)
 table(selectedLoans$not.fully.paid)
 str(selectedLoans)
 
+#optional recitation
+baseball = read.csv('baseball.csv.1')
+str(baseball)
+summary(baseball)
+table(baseball$Year, baseball$Team)
+sum(baseball$Year, baseball$Team)
+table(baseball$Year)
+nrow(baseball$Year)
+nrow(baseball)
+#length here gets the output of the df or in this case the table
+length(table(baseball$Year))
+
+madeplayoffs = subset(baseball, baseball$Playoffs == 1)
+str(madeplayoffs)
+
+table(madeplayoffs$Year)
+#OR
+table(table(madeplayoffs$Year))
+
+PlayoffTable = table(madeplayoffs$Year)
+names(PlayoffTable)
+
+#to access
+PlayoffTable[c('2001','1999')]
+
+madeplayoffs$NumCompetitors = PlayoffTable[as.character(madeplayoffs$Year)]
+table(madeplayoffs$NumCompetitors)
+
+baseball = madeplayoffs
+baseball$WorldSeries = as.numeric(baseball$RankPlayoffs == 1)
+str(baseball$WorldSeries)
+
+LogModel = glm(WorldSeries ~ Year + RA + RankSeason + NumCompetitors, data=baseball, family=binomial)
+summary(LogModel)
+cor(baseball[c('Year', 'RA', 'RankSeason', 'NumCompetitors')])
