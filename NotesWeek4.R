@@ -148,4 +148,73 @@ table(Test$Reverse, PredictCV)
 PART TWO: The d2Hawkeye story on healthcare analytics and costs
 
 '
+Claims = read.csv('ClaimsData.csv')
+summary(claims)
+str(Claims)
 
+table(Claims$bucket2009)/nrow(Claims)
+
+library(caTools)
+set.seed(88)
+spl = sample.split(Claims$bucket2009, SplitRatio = 0.6)
+ClaimsTrain = subset(Claims, spl == TRUE)
+ClaimsTest = subset(Claims, spl == FALSE)
+
+summary(ClaimsTrain)
+
+#Let's get the baseline method
+#Which is the accuracy
+table(ClaimsTest$bucket2009, ClaimsTest$bucket2008)
+(110138+10721+2774+1539+104)/nrow(ClaimsTest)
+
+PenaltyMatrix = matrix(c(0,1,2,3,4,2,0,1,2,3,4,2,0,1,2,6,4,2,0,1,8,6,4,2,0), byrow = TRUE, nrow = 5)
+PenaltyMatrix
+
+#Penalty Error
+as.matrix(table(ClaimsTest$bucket2009,ClaimsTest$bucket2008))*PenaltyMatrix
+sum(as.matrix(table(ClaimsTest$bucket2009,ClaimsTest$bucket2008))*PenaltyMatrix)/nrow(ClaimsTest)
+
+#quick questions - new baseline and penalty error
+#predict baseline cost bucket 1 for everyone
+#acc
+122978/(122978+34840+16390+7937+1057)
+122978/(nrow(ClaimsTest))
+table(ClaimsTest$bucket2009)
+
+sum(as.matrix(table(ClaimsTest$bucket2009,ClaimsTest$bucket2009))*PenaltyMatrix)/nrow(ClaimsTest)
+
+# Build a CART model to predict costs in R
+library(rpart)
+library(rpart.plot)
+ClaimsTree = rpart(bucket2009 ~ age + alzheimers + arthritis + cancer + copd + depression + diabetes + heart.failure + ihd + kidney + osteoporosis + stroke + bucket2008 + reimbursement2008, data=ClaimsTrain, method="class", cp=0.00005)
+#Not doing Cross Validation since there are 275k and it will take a long time. The R commands using CV here
+# are the same as it would be for the Supreme Court decisions
+
+#let's look at the tree:
+prp(ClaimsTree)
+
+#let's make some predictions, and get confusion matrix
+PredictTest = predict(ClaimsTree, newdata = ClaimsTest, type = 'class')
+table(ClaimsTest$bucket2009, PredictTest)
+#accuracy
+(114141+16102+118+201+0)/(nrow(ClaimsTest))
+#so .713% accuracy
+
+#For Penalty Error, we can do the same as before
+as.matrix(table(ClaimsTest$bucket2009, PredictTest))*PenaltyMatrix
+#So this multiplies it by the corresponding nubmer in the penalty Matrix
+#Now we just sum it all up
+sum(as.matrix(table(ClaimsTest$bucket2009, PredictTest))*PenaltyMatrix)/nrow(ClaimsTest)
+#So a penalty error of .74
+# this is high because we are not optimizing for loss.
+#We need to add a param to our Claims Tree for the loss function
+#params = list(loss=PenaltyMatrix)
+ClaimsTree = rpart(bucket2009 ~ age + alzheimers + arthritis + cancer + copd + depression + diabetes + heart.failure + ihd + kidney + osteoporosis + stroke + bucket2008 + reimbursement2008, data=ClaimsTrain, method="class", cp=0.00005, parms=list(loss=PenaltyMatrix))
+#Now it will choose different splits to minimize the worst types of errors. We may get a lower
+# accuracy, but a lower penalty error as well
+#make predictions again, and accuracy/penalty lower
+PredictTest = predict(ClaimsTree, newdata = ClaimsTest, type = 'class')
+table(ClaimsTest$bucket2009, PredictTest)
+(94310+18942+4692+636+2)/(nrow(ClaimsTest))
+sum(as.matrix(table(ClaimsTest$bucket2009, PredictTest))*PenaltyMatrix)/nrow(ClaimsTest)
+PenaltyMatrix
