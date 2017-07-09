@@ -218,3 +218,100 @@ table(ClaimsTest$bucket2009, PredictTest)
 (94310+18942+4692+636+2)/(nrow(ClaimsTest))
 sum(as.matrix(table(ClaimsTest$bucket2009, PredictTest))*PenaltyMatrix)/nrow(ClaimsTest)
 PenaltyMatrix
+
+"
+Recitation: Boston Houses Prices
+Machine Learning with Decision Trees to predict Boston Housing Prices in R
+MITx: 15.071x The Analytics Edge
+"
+#Going to try and use ggplot2 over base R plotting
+boston = read.csv('boston.csv')
+#load ggplot2
+library(ggplot2)
+qplot(boston$LON, boston$LAT)
+#+geom_point(boston$LON[boston$CHAS==1],boston$LAT[boston$CHAS==1])
+plot(boston$LON, boston$LAT)
+points(boston$LON[boston$CHAS==1],boston$LAT[boston$CHAS==1], col ='blue', pch = 19)
+points(boston$LON[boston$TRACT == 3531], boston$LAT[boston$TRACT == 3531], col = 'red', pch = 19)
+summary(boston$NOX)
+summary(boston)
+
+points(boston$LON[boston$NOX >= 0.55], boston$LAT[boston$NOX >= 0.55], col = 'green', pch = 19)
+plot(boston$LON, boston$LAT)
+summary(boston$MEDV)
+points(boston$LON[boston$MEDV>= 21.2], boston$LAT[boston$MEDV >= 21.2], col = 'red', pch = 19)
+
+
+qplot(boston$LAT, boston$MEDV)
+qplot(boston$LON, boston$MEDV)
+latlonlm = lm(MEDV ~ LAT + LON, data = boston)
+summary(latlonlm)
+
+qplot(boston$LON, boston$LAT)
+plot(boston$LON,boston$LAT)
+
+points(boston$LON[boston$MEDV >= 21.2], boston$LAT[boston$MEDV >= 21.2], col = 'red', pch = 19)
+points(boston$LON[latlonlm$fitted.values >= 21.2], boston$LAT[latlonlm$fitted.values >= 21.2], col = 'blue', pch = '$')
+
+#Doesn't look so good. so let's use the rpart library
+library(rpart)
+library(rpart.plot)
+latlonTree = rpart(MEDV ~ LAT + LON, data = boston)
+prp(latlonTree)
+
+#in regression trees, we instead predict a number
+plot(boston$LON,boston$LAT)
+points(boston$LON[boston$MEDV >= 21.2], boston$LAT[boston$MEDV >= 21.2], col = 'red', pch = 19)
+fittedvalues = predict(latlonTree)
+
+
+
+library(caret)
+library(e1071)
+# Split the data
+library(caTools)
+set.seed(123)
+split = sample.split(boston$MEDV, SplitRatio = 0.7)
+train = subset(boston, split==TRUE)
+test = subset(boston, split==FALSE)
+
+# Create linear regression
+linreg = lm(MEDV ~ LAT + LON + CRIM + ZN + INDUS + CHAS + NOX + RM + AGE + DIS + RAD + TAX + PTRATIO, data=train)
+summary(linreg)
+
+# Make predictions
+linreg.pred = predict(linreg, newdata=test)
+linreg.sse = sum((linreg.pred - test$MEDV)^2)
+linreg.sse
+
+# Create a CART model
+tree = rpart(MEDV ~ LAT + LON + CRIM + ZN + INDUS + CHAS + NOX + RM + AGE + DIS + RAD + TAX + PTRATIO, data=train)
+prp(tree)
+
+# Make predictions
+tree.pred = predict(tree, newdata=test)
+tree.sse = sum((tree.pred - test$MEDV)^2)
+tree.sse
+
+
+tr.control = trainControl(method='cv', number = 10)
+#tells which range of CP parameters to try out! CP varies between
+# 0 and 1. We don't need to explore the full range
+cp.grid = expand.grid(.cp = (0:10)*0.001)
+#That above gave a range of 0 to .01 by .001 steps!
+#to caret will try those values of cp
+tr = train(MEDV ~ LAT + LON + CRIM + ZN + INDUS + CHAS + NOX + RM + AGE + DIS + RAD + TAX + PTRATIO, data = train, method = "rpart", trControl = tr.control, tuneGrid = cp.grid)
+tr
+
+# Extract tree
+best.tree = tr$finalModel
+prp(best.tree)
+
+# Make predictions
+best.tree.pred = predict(best.tree, newdata=test)
+best.tree.sse = sum((best.tree.pred - test$MEDV)^2)
+best.tree.sse
+
+
+
+
