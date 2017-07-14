@@ -127,6 +127,7 @@ table(newTest$letter, letRFPreds)
 Part 3 - Predicting Earning from Census Data
 '
 census = read.csv('census.csv')
+library(caTools)
 
 #train  test split
 set.seed(2000)
@@ -149,7 +150,7 @@ aucPreds = prediction(cenPredict, cenTest$over50k)
 as.numeric(performance(aucPreds, 'auc')@y.values)
 
 #part 2, now for classification trees
-
+library(rpart.plot)
 #don't forget to set method  = class since this is a class prediction!
 cenTree = rpart(over50k ~ ., data = cenTest, method = 'class')
 prp(cenTree)
@@ -163,6 +164,7 @@ table(cenTest$over50k, treePreds)
 aucTree = prediction(treePreds[,2], cenTest$over50k)
 as.numeric(performance(aucTree, 'auc')@y.values)
 
+library(rpart)
 #create random forest
 cenForest = randomForest(over50k ~ ., data = cenTrain, method = 'class')
 
@@ -185,5 +187,19 @@ train(over50k ~ ., data = cenTrain, method='rpart', trControl = numFolds, tuneGr
 #now fit a cart model
 newCenTree = rpart(over50k ~ ., data = cenTrain, method = 'class', cp = 0.002)
 #now for decision tree accuracy calculation in R
-treePreds = predict(newCenTree, newdata = cenTest)
+treePreds = predict(newCenTree, newdata = cenTest, type = 'class')
+str(treePreds)
+summary(treePreds)
 table(cenTest$over50k, treePreds)
+prp(newCenTree)
+
+
+library(ggplot2)
+library(ggjoy)
+
+summary(diamonds)
+
+ggplot(diamonds, aes(x=price, y=cut, group=cut)) +
+  geom_joy(scale=4) + theme_joy() +
+  scale_y_discrete(expand=c(0.01, 0)) +   # will generally have to set the `expand` option
+  scale_x_continuous(expand=c(0, 0))      # for both axes to remove unneeded padding
