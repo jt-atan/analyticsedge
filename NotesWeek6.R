@@ -221,4 +221,3 @@ NumClusters = seq(2,10,1)
 plot(NumClusters, SumWithinss, type="b")
 
 
-
