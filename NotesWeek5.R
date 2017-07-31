@@ -159,6 +159,8 @@ dtm
 #create data frame, this creates the frequencies 
 labeledTerms = as.data.frame(as.matrix(dtm))
 
+
+
 #Add in the outcome variable, if the email was responsive. creates a matrix of word occurances by email
 labeledTerms$responsive = emails$responsive
 str(labeledTerms)
