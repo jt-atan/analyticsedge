@@ -1,6 +1,6 @@
-#Notes Week 6 edX 
+#Notes Week 7 edX 
 #MITx: 15.071x The Analytics Edge
-#Clustering
+#Visualizations in R with ggplot2
 '
 Part One: Visualizing Chicago Crime
 '
@@ -192,10 +192,57 @@ ggplot(intl, aes(x = Region, y = PercentOfIntl)) + geom_bar(stat = 'identity') +
 #what we need to do is make region an ordered factor instead of an unordered factor
 intl = transform(intl, Region = reorder(Region, -PercentOfIntl))
 str(intl)
-intl$PercentOfIntl = intl$PercentOfIntl * 100
+intl$PercentOfIntl = intl$PercentOfIntl * 100 
 ggplot(intl, aes(x = Region, y = PercentOfIntl)) + geom_bar(stat = 'identity', fill = 'blue') + geom_text(aes(label = PercentOfIntl), vjust = -0.4) + ylab('Percent of intl students') + theme(axis.title.x = element_blank(), axis.text.x = element_text(angle = 45, hjust = 1))
 
 
 
+intlall = read.csv('intlall.csv', stringsAsFactors = TRUE)
+head(intlall)
+# Those NAs are really 0s, and we can replace them easily
+intlall[is.na(intlall)] = 0
 
+head(intlall)
 
+world_map = map_data("world")
+str(world_map)
+# Lets merge intlall into world_map using the merge command
+world_map = merge(world_map, intlall, by.x ="region", by.y = "Citizenship")
+str(world_map)
+
+ggplot(world_map, aes(x=long, y=lat, group=group)) +
+  geom_polygon(fill="white", color="black") +
+  coord_map("mercator")
+
+# Reorder the data
+world_map = world_map[order(world_map$group, world_map$order),]
+
+# Redo the plot
+ggplot(world_map, aes(x=long, y=lat, group=group)) +
+  geom_polygon(fill="white", color="black") +
+  coord_map("mercator")
+
+# Lets look for China
+table(intlall$Citizenship) 
+
+# Lets "fix" that in the intlall dataset
+intlall$Citizenship[intlall$Citizenship=="China (People's Republic Of)"] = "China"
+
+# We'll repeat our merge and order from before
+world_map = merge(map_data("world"), intlall, 
+                  by.x ="region",
+                  by.y = "Citizenship")
+world_map = world_map[order(world_map$group, world_map$order),]
+
+ggplot(world_map, aes(x=long, y=lat, group=group)) +
+  geom_polygon(aes(fill=Total), color="black") +
+  coord_map("mercator")
+
+# We can try other projections - this one is visually interesting
+ggplot(world_map, aes(x=long, y=lat, group=group)) +
+  geom_polygon(aes(fill=Total), color="black") +
+  coord_map("ortho", orientation=c(20, 30, 0))
+
+ggplot(world_map, aes(x=long, y=lat, group=group)) +
+  geom_polygon(aes(fill=Total), color="black") +
+  coord_map("ortho", orientation=c(-37, 175, 0))
